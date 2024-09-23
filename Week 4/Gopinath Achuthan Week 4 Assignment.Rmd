@@ -1,0 +1,129 @@
+---
+title: "Alcohol Consumption Data Analysis"
+author: "Gopinath Achuthan"
+date: "2024-09-22"
+output: html_document
+---
+
+## Description of the data
+
+This dataset measures the average alcohol consumption per person in different countries, specifically focusing on beer, spirits, and wine servings. It provides insights into drinking habits globally and can help address research questions related to cultural consumption patterns, public health implications, and economic factors surrounding alcohol production and sales. The data is stored in a CSV format, which is a delimited text file where each line represents a row of data, and the values are separated by commas.
+
+## Reading the data into R
+
+```{r load, echo=TRUE}
+
+# Load the necessary package
+suppressMessages(library(readr)) # for reading csv files into a dataframe
+suppressMessages(suppressWarnings(library(dplyr))) # for data cleaning
+suppressMessages(suppressWarnings(library(knitr))) # for displaying table
+
+# Read the CSV file and assign it to a dataframe
+url <- 'https://raw.githubusercontent.com/fivethirtyeight/data/refs/heads/master/alcohol-consumption/drinks.csv'
+alcohol_data <- read_csv(url, 
+                         col_names = TRUE,
+                         show_col_types = FALSE)
+
+# The col_names = TRUE argument in read_csv() indicates that the first row of the CSV file contains the column names
+# Setting show_col_types = FALSE in read_csv() suppresses the display of column type information for a cleaner output
+
+# Display the raw data
+kable(head(alcohol_data, 5),
+      caption = '<div style="text-align: center; color: turquoise;">Top 5 Raw Data</div>',
+      align = 'c'
+)
+
+```
+## Clean the data
+
+```{r clean, echo=TRUE}
+
+# Clean the data: Renaming columns and filtering the column by Keeping only countries with positive alcohol consumption
+cleaned_data <- alcohol_data %>%
+  rename(
+    country_name = country,
+    beer_servings_per_person = beer_servings,
+    spirit_servings_per_person = spirit_servings,
+    wine_servings_per_person = wine_servings,
+    total_alcohol_litres_per_person = total_litres_of_pure_alcohol
+  ) %>%
+  filter(total_alcohol_litres_per_person > 0)
+
+# Display the cleaned data
+kable(head(cleaned_data, 5),
+      caption = '<div style="text-align: center; color: turquoise;">Top 5 Cleaned Data</div>',
+      align = 'c'
+)
+
+```
+
+## Characteristics of the data
+
+```{r characteristics, echo=TRUE}
+
+# Create a characteristics table
+column_info <- data.frame(
+  Column_Number = 1:3,
+  Column_Name = c("country_name", "beer_servings_per_person", "total_alcohol_litres_per_person"),
+  Description = c("Name of the country", 
+                  "Average beer serving sizes per person", 
+                  "Average total pure alcohol litres per person")
+)
+
+# column alignment: "l" for left, "c" for center, "r" for right
+alignment <- c("c", "l", "l")  # Center for column 1, left for columns 2 and 3
+
+# Display the characteristics table using kable
+kable(column_info, 
+      caption = '<div style="text-align: center; color: turquoise;">Characteristics Table</div>',
+      align = alignment)
+```
+
+## Subset and Summary
+
+```{r summary, echo=TRUE}
+# Create a subset of the dataframe with two selected columns
+subset_data <- cleaned_data[, c("beer_servings_per_person", "total_alcohol_litres_per_person")]
+
+# Function to calculate mode
+get_mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+# Summarize the two columns
+summary_stats <- data.frame(
+  Min = c(
+    min(subset_data$beer_servings_per_person, na.rm = TRUE),
+    min(subset_data$total_alcohol_litres_per_person, na.rm = TRUE)
+  ),
+  Max = c(
+    max(subset_data$beer_servings_per_person, na.rm = TRUE),
+    max(subset_data$total_alcohol_litres_per_person, na.rm = TRUE)
+  ),
+  Mean = c(
+    mean(subset_data$beer_servings_per_person, na.rm = TRUE),
+    mean(subset_data$total_alcohol_litres_per_person, na.rm = TRUE)
+  ),
+  Mode = c(
+    get_mode(subset_data$beer_servings_per_person),
+    get_mode(subset_data$total_alcohol_litres_per_person)
+  )
+)
+
+# Set row names for clarity
+rownames(summary_stats) <- c("<b>Beer Servings</b>", "<b>Total Pure Alcohol</b>")
+
+# assign summary stats to a new object
+summary_result <- summary_stats
+
+# Display the summary results using kable
+kable(summary_result, 
+      caption = '<div style="text-align: center; color: turquoise;">Summary Statistics</div>',
+      align = 'c')
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
